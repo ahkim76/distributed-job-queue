@@ -8,6 +8,8 @@ import "fmt"
 
 // POST /jobs -> enqueue a job
 
+// GET /jobs -> get all job statuses
+
 // GET /jobs/:id -> get job status
 
 // GET /stats -> queue depths
