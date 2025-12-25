@@ -1,19 +1,98 @@
 package main
 
-import "fmt"
+import (
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"strconv"
+	"time"
+
+	"github.com/ahkim76/distributed-job-queue/internal/jobs"
+	"github.com/gin-gonic/gin"
+)
 
 // EXECUTABLE THAT STARTS THE HTTP SERVER
 // Connects to database, creates HTTP router, calls http.ListenAndServe(":8080", router)
 // No code logic; wires things together
 
+var errMsg = "timeout contacting external API"
+var lease = time.Now().Add(30 * time.Second)
+
+var jobStore = []jobs.Job{
+	{
+		ID:          1, QueueName:   "default", JobType:     "log_message", Payload:     json.RawMessage(`{"msg":"hello world"}`),
+		Status:      "pending", Attempts:    0, MaxAttempts: 5,
+		Priority:    0, VisibleAt:   time.Now(), CreatedAt:   time.Now(), UpdatedAt:   time.Now(),
+	},
+	{
+		ID:        2, QueueName: "emails", JobType:   "send_email", Payload:   json.RawMessage(`{"to":"test@example.com","subject":"Welcome!"}`),
+		Status:      "pending", Attempts:    1, MaxAttempts: 3, Priority:    10,
+		VisibleAt: time.Now(), CreatedAt: time.Now(), UpdatedAt: time.Now(),
+	},
+	{
+		ID:        3, QueueName: "payments", JobType:   "charge_card", Payload:   json.RawMessage(`{"user_id":42,"amount":1999}`),
+		Status:         "processing", Attempts:       2, MaxAttempts:    5, Priority:       5,
+		VisibleAt:      time.Now(), LeaseExpiresAt: &lease, LastError:      &errMsg,
+		CreatedAt: time.Now(), UpdatedAt: time.Now(),
+	},
+
+}
+
 // POST /jobs -> enqueue a job
+func postJobs(c *gin.Context) {
+	var newJob jobs.Job
+	
+	err := c.BindJSON(&newJob)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "invalid JSON"})
+		return
+	}
+	jobStore = append(jobStore, newJob)
+	c.IndentedJSON(http.StatusOK, newJob)
+}
 
 // GET /jobs -> get all job statuses
+func getJobs(c *gin.Context) {
+	c.IndentedJSON(http.StatusOK, jobStore)
+}
 
 // GET /jobs/:id -> get job status
+func getJobByID(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "invalid job ID"})
+		return
+	}
+	for _, a := range jobStore {
+		if a.ID == id {
+			c.IndentedJSON(http.StatusOK, a)
+			return
+		}
+	}
+	c.IndentedJSON(http.StatusNotFound, gin.H{"error": "job not found"})
+}
 
 // GET /stats -> queue depths
+func getStats(c *gin.Context) {
+	fmt.Println("hi")
+	// initialize an accumulator
+
+	// loop over jobStore and increment respective (queue_name, status) pair
+}
 
 func main() {
 	fmt.Println("Hello world!!!")
+
+	// Initialize HTTP router
+	router := gin.Default()
+
+	// ENDPOINTS
+	router.GET("/jobs", getJobs)
+	router.GET("/jobs/:id", getJobByID)
+	router.POST("/jobs", postJobs)
+
+	// Run HTTP server
+	router.Run("localhost:8080")
 }
+
