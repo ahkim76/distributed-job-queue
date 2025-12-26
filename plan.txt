@@ -1,10 +1,10 @@
 DAY 1: Skeleton, DB, Basic API (enqueue + status)
 GOAL IS TO POST /jobs AND GET /jobs/:id AND THE ROW IS IN POSTGRES
-    1. Create Go module + basic structure (and learn stuff)
-    2. Postgres schema
-    3. DB connection helper
-    4. Job model + basic repo
-    5. API server (basic)
+    1. Create Go module + basic structure (and learn stuff) | DONE
+    2. Postgres schema | DONE
+    3. DB connection helper | WILL DO
+    4. Job model + basic repo | ALMOST DONE
+    5. API server (basic) | DONE
 
 DAY 2: Worker process + claim logic
 GOAL IS TO START ONE OR MORE WORKERS AND THEY PULL PENDING JOBS AND MARK THEM DONE
@@ -19,7 +19,7 @@ GOAL IS TO RETRY JOBS THAT FAIL WITH BACKOFF AND MOVE TO DLQ. STUCK JOBS GET REC
     1. Backoff + failed updates
     2. Simulate failing handler 
     3. Sweeper/reaper
-    4. /stats API endpoint
+    4. /stats API endpoint | DONE
     5. Chaos testing
 
 DAY 4: Docker, polish, finish MVP

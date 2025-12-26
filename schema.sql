@@ -9,10 +9,10 @@ CREATE TABLE jobs (
     max_attempts        INT NOT NULL DEFAULT 5, -- retry cap
     priority            INT NOT NULL DEFAULT 0, 
 
-    visible_at          TIMESTAMPZ NOT NULL DEFAULT NOW(), -- future-ready: delayed jobs + retry backoff
-    lease_expires_at    TIMESTAMPZ,             -- crash safety: if worker dies, another can reclaim
+    visible_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(), -- future-ready: delayed jobs + retry backoff
+    lease_expires_at    TIMESTAMPTZ,             -- crash safety: if worker dies, another can reclaim
     last_error          TEXT,                   -- debugging and DLQ info
 
-    created_at          TIMESTAMPZ NOT NULL DEFAULT NOW(),
-    updated_at          TIMESTAMPZ NOT NULL DEFAULT NOW()
+    created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 )
