@@ -77,8 +77,47 @@ func getJobByID(c *gin.Context) {
 func getStats(c *gin.Context) {
 	fmt.Println("hi")
 	// initialize an accumulator
+	statMap := make(map[string]map[string]int)
 
 	// loop over jobStore and increment respective (queue_name, status) pair
+	for _, a := range jobStore {
+		queue_name := a.QueueName
+		status := a.Status
+
+		// check if queue_name exists
+		if _, ok := statMap[queue_name]; !ok {
+			statMap[queue_name] = make(map[string]int)
+		} 
+
+		// check status
+		current_queue := statMap[queue_name]
+		if _, ok := current_queue[status]; !ok {
+			current_queue[status] = 0
+		} 
+		current_queue[status]++
+		statMap[queue_name] = current_queue
+	}
+
+	// convert map -> slice for JSON response
+	type StatRow struct {
+		QueueName string `json:"queue_name"`
+		Status string `json:"status"`
+		Count int `json:"count"`
+	}
+
+	stats := []StatRow{}
+
+	for queue, inner := range statMap {
+		for status, count := range inner {
+			stats = append(stats, StatRow{
+				QueueName: queue,
+				Status: status,
+				Count: count,
+			})
+		}
+	}
+	c.IndentedJSON(http.StatusOK, gin.H{"stats": stats})
+
 }
 
 func main() {
@@ -87,10 +126,11 @@ func main() {
 	// Initialize HTTP router
 	router := gin.Default()
 
-	// ENDPOINTS
+	// Endpoints
 	router.GET("/jobs", getJobs)
 	router.GET("/jobs/:id", getJobByID)
 	router.POST("/jobs", postJobs)
+	router.GET("/jobs/status", getStats)
 
 	// Run HTTP server
 	router.Run("localhost:8080")
