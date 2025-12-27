@@ -54,25 +54,46 @@ func postJobs(c *gin.Context) {
 }
 
 // GET /jobs -> get all jobs
-func getJobs(c *gin.Context) {
-	c.IndentedJSON(http.StatusOK, jobStore)
+func makeGetJobsHandler(repo *jobs.JobRepo) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx := c.Request.Context()
+
+		allJobs, err := repo.GetAllJobs(ctx)
+		if err != nil {
+			c.IndentedJSON(http.StatusInternalServerError, gin.H{
+				"error": "failed to fetch jobs",
+			})
+			return
+		}
+
+		c.IndentedJSON(http.StatusOK, allJobs)
+	}
 }
 
 // GET /jobs/:id -> get a job
-func getJobByID(c *gin.Context) {
-	idParam := c.Param("id")
-	id, err := strconv.ParseInt(idParam, 10, 64)
-	if err != nil {
-		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "invalid job ID"})
-		return
-	}
-	for _, a := range jobStore {
-		if a.ID == id {
-			c.IndentedJSON(http.StatusOK, a)
+func makeGetJobsByIDHandler(repo *jobs.JobRepo) gin.HandlerFunc{
+	return func(c *gin.Context) {
+		ctx := c.Request.Context()
+		idParam := c.Param("id")
+		idInt, err := strconv.ParseInt(idParam, 10, 64) 
+		if err != nil {
+			c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "invalid job ID"})
+		}
+
+		job, err := repo.GetJobWithID(ctx, idInt)
+
+		if err != nil {
+			c.IndentedJSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch job"})
 			return
 		}
+
+		if job == nil {
+			c.IndentedJSON(http.StatusNotFound, gin.H{"error": "job not found"})
+			return
+		}
+
+		c.IndentedJSON(http.StatusOK, job)
 	}
-	c.IndentedJSON(http.StatusNotFound, gin.H{"error": "job not found"})
 }
 
 // DELETE /jobs/:id -> deletes job with id
@@ -154,8 +175,8 @@ func main() {
 	router := gin.Default()
 
 	// Endpoints
-	router.GET("/jobs", getJobs)
-	router.GET("/jobs/:id", getJobByID)
+	router.GET("/jobs", makeGetJobsHandler(jobRepo))
+	router.GET("/jobs/:id", makeGetJobsByIDHandler(jobRepo))
 	router.POST("/jobs", postJobs)
 	router.GET("/jobs/status", getStats)
 	router.DELETE("jobs/:id", deleteJob)

@@ -29,7 +29,9 @@ const (
 // Insert job
 
 // Get all jobs
-func (r *JobRepo) GetAllJobsQuery(ctx context.Context) ([]Job, error) {
+func (r *JobRepo) GetAllJobs(ctx context.Context) ([]Job, error) {
+
+	// Execute query that returns multiple rows
 	rows, err := r.db.QueryContext(ctx,
 	`SELECT
             id,
@@ -47,6 +49,7 @@ func (r *JobRepo) GetAllJobsQuery(ctx context.Context) ([]Job, error) {
             updated_at
         FROM jobs;`,
 	)
+	// Check for success
 	if err != nil {
 		return nil, err
 	}
@@ -78,10 +81,58 @@ func (r *JobRepo) GetAllJobsQuery(ctx context.Context) ([]Job, error) {
 		result = append(result, j)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
 	return result, nil
 }	
 
 // Get job
+func (r *JobRepo) GetJobWithID(ctx context.Context, id int64) (*Job, error) {
+	var j Job
+	err := r.db.QueryRowContext(ctx, `
+	SELECT
+		id,
+		queue_name,
+		job_type,
+		payload,
+		status,
+		attempts,
+		max_attempts,
+		priority,
+		visible_at,
+		lease_expires_at,
+		last_error,
+		created_at,
+		updated_at
+	FROM jobs
+	WHERE jobs.id = $1
+	`, id).Scan(
+		&j.ID,
+        &j.QueueName,
+        &j.JobType,
+        &j.Payload,
+        &j.Status,
+        &j.Attempts,
+        &j.MaxAttempts,
+        &j.Priority,
+        &j.VisibleAt,
+        &j.LeaseExpiresAt,
+        &j.LastError,
+        &j.CreatedAt,
+        &j.UpdatedAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &j, nil
+}
 
 
 // Claim job
