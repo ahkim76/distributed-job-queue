@@ -2,7 +2,11 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
+	"os"
+
+	_ "github.com/joho/godotenv/autoload"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
@@ -11,8 +15,10 @@ import (
 
 func OpenDB() *sql.DB {
 	// Connection string
-	dsn := "postgresql://neondb_owner:npg_aQvD60wWULIo@ep-small-salad-ad8vc158-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		log.Fatal("DATABASE_URL not set")
+	}
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		log.Fatal(err)
@@ -21,6 +27,6 @@ func OpenDB() *sql.DB {
 	if err := db.Ping(); err != nil {
 		log.Fatal("cannot connect:", err)
 	}
-
+	fmt.Println("Successfully connected to PostgreSQL database!")
 	return db
 }
