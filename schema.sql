@@ -1,4 +1,4 @@
-CREATE TABLE jobs (
+CREATE TABLE IF NOT EXISTS jobs (
     id                  BIGSERIAL PRIMARY KEY,  -- unique job ID
     queue_name          TEXT NOT NULL DEFAULT 'default', -- lets you support multiple queues (payments, emails, etc)
     job_type            TEXT NOT NULL,          -- which handler/function runs this job

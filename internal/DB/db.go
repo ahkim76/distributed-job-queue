@@ -19,6 +19,7 @@ func OpenDB() *sql.DB {
 	if dsn == "" {
 		log.Fatal("DATABASE_URL not set")
 	}
+	
 	db, err := sql.Open("pgx", dsn)
 	if err != nil {
 		log.Fatal(err)

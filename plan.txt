@@ -2,8 +2,8 @@ DAY 1: Skeleton, DB, Basic API (enqueue + status)
 GOAL IS TO POST /jobs AND GET /jobs/:id AND THE ROW IS IN POSTGRES
     1. Create Go module + basic structure (and learn stuff) | DONE
     2. Postgres schema | DONE
-    3. DB connection helper | WILL DO
-    4. Job model + basic repo | ALMOST DONE
+    3. DB connection | DONE
+    4. Job model + basic repo | DONE
     5. API server (basic) | DONE
 
 DAY 2: Worker process + claim logic
