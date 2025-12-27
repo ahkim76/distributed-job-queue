@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/ahkim76/distributed-job-queue/internal/db"
 	"github.com/ahkim76/distributed-job-queue/internal/jobs"
 	"github.com/gin-gonic/gin"
 )
@@ -139,7 +140,15 @@ func getStats(c *gin.Context) {
 }
 
 func main() {
-	fmt.Println("Hello world!!!")
+	database := db.OpenDB()
+
+	// Run Close() when the surrounding function (main) returns
+	defer database.Close()
+
+	// Use Repository Pattern for separation of concerns
+	jobRepo := jobs.NewJobRepo(database)
+
+	fmt.Println(jobRepo)
 
 	// Initialize HTTP router with default middleware
 	router := gin.Default()

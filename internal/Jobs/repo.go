@@ -10,7 +10,7 @@ type JobRepo struct {
 	db *sql.DB
 }
 
-func newJobRepo(db *sql.DB) *JobRepo {
+func NewJobRepo(db *sql.DB) *JobRepo {
 	return &JobRepo{db: db}
 }
 
