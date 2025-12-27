@@ -42,6 +42,7 @@ var jobStore = []jobs.Job{
 func postJobs(c *gin.Context) {
 	var newJob jobs.Job
 	
+	// BindJSON reads HTTP request body, parses JSON, writes parsed fields into the memory at &newJob
 	err := c.BindJSON(&newJob)
 	if err != nil {
 		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "invalid JSON"})
@@ -51,12 +52,12 @@ func postJobs(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, newJob)
 }
 
-// GET /jobs -> get all job statuses
+// GET /jobs -> get all jobs
 func getJobs(c *gin.Context) {
 	c.IndentedJSON(http.StatusOK, jobStore)
 }
 
-// GET /jobs/:id -> get job status
+// GET /jobs/:id -> get a job
 func getJobByID(c *gin.Context) {
 	idParam := c.Param("id")
 	id, err := strconv.ParseInt(idParam, 10, 64)
@@ -73,9 +74,27 @@ func getJobByID(c *gin.Context) {
 	c.IndentedJSON(http.StatusNotFound, gin.H{"error": "job not found"})
 }
 
+// DELETE /jobs/:id -> deletes job with id
+func deleteJob(c *gin.Context) {
+	idParam := c.Param("id")
+	id, err := strconv.ParseInt(idParam, 10, 64)
+	if err != nil {
+		c.IndentedJSON(http.StatusBadRequest, gin.H{"error": "invalid ID value"})
+	}
+
+	for i, a := range jobStore {
+		if a.ID == id {
+			jobStore = append(jobStore[:i], jobStore[i+1:]...)
+			c.Status(http.StatusNoContent)
+			return 
+		}
+	}
+
+	c.IndentedJSON(http.StatusNotFound, gin.H{"error": "job not found"})
+}
+
 // GET /stats -> queue depths
 func getStats(c *gin.Context) {
-	fmt.Println("hi")
 	// initialize an accumulator
 	statMap := make(map[string]map[string]int)
 
@@ -117,13 +136,12 @@ func getStats(c *gin.Context) {
 		}
 	}
 	c.IndentedJSON(http.StatusOK, gin.H{"stats": stats})
-
 }
 
 func main() {
 	fmt.Println("Hello world!!!")
 
-	// Initialize HTTP router
+	// Initialize HTTP router with default middleware
 	router := gin.Default()
 
 	// Endpoints
@@ -131,6 +149,7 @@ func main() {
 	router.GET("/jobs/:id", getJobByID)
 	router.POST("/jobs", postJobs)
 	router.GET("/jobs/status", getStats)
+	router.DELETE("jobs/:id", deleteJob)
 
 	// Run HTTP server
 	router.Run("localhost:8080")

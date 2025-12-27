@@ -16,6 +16,10 @@ func newJobRepo(db *sql.DB) *JobRepo {
 
 const (
 	StatusPending JobStatus = "pending"
+	StatusComplete JobStatus = "complete"
+	StatusFailed JobStatus = "failed"
+	StatusProcessing JobStatus = "processing"
+	StatusNew JobStatus = "new"
 )
 
 // DB functions: insert, get, claim, update, stats
